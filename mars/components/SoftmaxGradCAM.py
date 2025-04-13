@@ -8,8 +8,8 @@ import torch.nn.functional as F
 from torch import nn
 
 from clip.clip import tokenize
-from clip.clip_text import new_class_names_coco
-from mars.utils.coco_prompts import classes, coco_templates
+from mars.components.PriorInformationRefinementModule import PriorInformationRefinementModule
+from mars.utils.coco_prompts import coco_templates
 from pytorch_grad_cam import GradCAM
 
 try:
@@ -18,7 +18,6 @@ try:
 except ImportError:
     BICUBIC = Image.BICUBIC
 warnings.filterwarnings("ignore")
-_CONTOUR_INDEX = 1 if cv2.__version__.split('.')[0] == '3' else 0
 
 class ClipOutputTarget:
     def __init__(self, target_idx):
@@ -46,7 +45,8 @@ class SoftmaxGradCAM:
         self,
         model: nn.Module,
         model_preprocess,
-        target_layers
+        target_layers,
+        
     ) -> None:
         if hasattr(model, 'visual'):
             if hasattr(model.visual, 'patch_size'):
@@ -108,35 +108,6 @@ class SoftmaxGradCAM:
         
         return foreground_text_feats.t(), background_text_feats.t()
     
-    def scoremap2bbox(self, scoremap, threshold, multi_contour_eval=False):
-        height, width = scoremap.shape
-        scoremap_image = np.expand_dims((scoremap * 255).astype(np.uint8), 2)
-        _, thr_gray_heatmap = cv2.threshold(
-            src=scoremap_image,
-            thresh=int(threshold * np.max(scoremap_image)),
-            maxval=255,
-            type=cv2.THRESH_BINARY)
-        contours = cv2.findContours(
-            image=thr_gray_heatmap,
-            mode=cv2.RETR_TREE,
-            method=cv2.CHAIN_APPROX_SIMPLE)[_CONTOUR_INDEX]
-
-        if len(contours) == 0:
-            return np.asarray([[0, 0, 0, 0]]), 1
-
-        if not multi_contour_eval:
-            contours = [max(contours, key=cv2.contourArea)]
-
-        estimated_boxes = []
-        for contour in contours:
-            x, y, w, h = cv2.boundingRect(contour)
-            x0, y0, x1, y1 = x, y, x + w, y + h
-            x1 = min(x1, width - 1)
-            y1 = min(y1, height - 1)
-            estimated_boxes.append([x0, y0, x1, y1])
-
-        return np.asarray(estimated_boxes), len(contours)
-    
     def scale_cam_image(self, cam, target_size=None) -> list:
         result = []
         for img in cam:
@@ -154,11 +125,10 @@ class SoftmaxGradCAM:
         image: torch.Tensor, 
         foreground_label: str,
         all_labels: list[str],
-        last_n_attn: int = 8,
         use_multiple_prompts: bool = False,
     ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """Computes the Softmax-GradCAM for the given image and target label,
-        given all the labels of the object classes present in the image.
+        given, possibly, all the labels of the object classes present in the image.
 
         :param image: image to compute the GradCAM on
         :type image: torch.Tensor
@@ -166,14 +136,11 @@ class SoftmaxGradCAM:
         :type foreground_label: str
         :param all_labels: list of all the object classes present in the image except the foreground_label
         :type all_labels: list[str]
-        :param last_n_attn: last n attention layers to use to refine the original CAM, defaults to 8
-        :type last_n_attn: int, optional
         :param use_multiple_prompts: if True, a set of 15 prompts will be used for foreground prompts. Optional, defaults to False
         :type use_multiple_prompts: bool, optional
-        :return: the refined CAM, the unrefined CAM and the transition matrix H to possibly use for custom refinement.
-        :rtype: tuple[torch.Tensor, torch.Tensor, torch.Tensor]
+        :return: the CAM, the list of attention maps of the model.
+        :rtype: tuple[torch.Tensor, list]
         """
-        original_height, original_width = image.shape[-2], image.shape[-1]
         processed_image = self.model_preprocess(image)
         
         processed_image = processed_image.unsqueeze(0)
@@ -205,67 +172,4 @@ class SoftmaxGradCAM:
         
         attn_weight_list.append(attn_weight_last_layer)
         
-        # Discarding the attention weights from/to cls token
-        attn_weight = [aw[:, 1:, 1:] for aw in attn_weight_list]
-        
-        # Keeping only the last_n attention blocks
-        attn_weight = torch.stack(attn_weight, dim=0)[-last_n_attn:]
-        
-        # Taking the mean of the attention blocks. Note that the CLIP model
-        # has MultiHead attention blocks, however the implementation already
-        # perform the mean across the multiple heads, so for each block we have
-        # a single attention map.
-        attn_weight = torch.mean(attn_weight, dim=0)
-        attn_weight = attn_weight[0].detach()
-        attn_weight = attn_weight.float()
-        
-        # Calculating the matrix B. As PI-CLIP/CLIP-ES paper suggest
-        # the matrix B is obtained by threhsolding the initial GradCAM.
-        # In this case the GradCAM is thresholded at 0.4 and then bounding
-        # boxes are drawn around all the connected components. The binary mask
-        # is constructed by putting 1s inside the BBs and 0 outside.
-        box, cnt = self.scoremap2bbox(scoremap=grayscale_cam, threshold=0.4, multi_contour_eval=True)
-        B = torch.zeros((grayscale_cam.shape[0], grayscale_cam.shape[1])).cuda()
-        for i_ in range(cnt):
-            x0_, y0_, x1_, y1_ = box[i_]
-            B[y0_:y1_, x0_:x1_] = 1
-        B = B.view(1, grayscale_cam.shape[0] * grayscale_cam.shape[1])
-        
-        # Performing the Sinkhorn normalization on attn_weight matrix
-        aff_mat = attn_weight
-        
-        D = aff_mat / torch.sum(aff_mat, dim=0, keepdim=True)
-        D = D / torch.sum(D, dim=1, keepdim=True)
-        
-        # Finally getting the refinement matrix R
-        DDT = D @ D.t()
-        R = torch.max(D, DDT)
-        
-        # Additional refinement step as introduced in CLIP-ES
-        for _ in range(1):
-            R = torch.matmul(R, R)
-        
-        R_B = R * B
-        
-        # Refining the CAM
-        cam_to_refine = torch.FloatTensor(grayscale_cam).cuda()
-        cam_to_refine = cam_to_refine.view(-1, 1)
-        
-        refined_cam = torch.matmul(R_B, cam_to_refine).reshape(h // self.patch_size, w // self.patch_size)
-        refined_cam = refined_cam.cpu().numpy().astype(np.float32)
-        cam_to_refine = cam_to_refine.reshape(h // self.patch_size, w // self.patch_size).cpu().numpy().astype(np.float32)
-
-        high_res_refined_cam = self.scale_cam_image(
-            [refined_cam.copy()],
-            (original_width, original_height)
-        )[0]
-        high_res_unrefined_cam = self.scale_cam_image(
-            [cam_to_refine],
-            (original_width, original_height)
-        )[0]
-        
-        return (
-            (torch.tensor(high_res_refined_cam).cuda(), torch.tensor(refined_cam).cuda()),
-            (torch.tensor(high_res_unrefined_cam).cuda(), torch.tensor(cam_to_refine).cuda()),
-            R
-        )
+        return grayscale_cam, attn_weight_list
