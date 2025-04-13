@@ -11,6 +11,8 @@
 <sup>1</sup>[Politecnico di Milano](https://polimi.it/en/), &nbsp;
 <sup>*</sup>Equal Contribution
 
+[![arXiv](https://a11ybadges.com/badge?logo=arxiv)](https://arxiv.org/abs/2504.07942)
+
 </div>
 
 ## :gear: Installation
