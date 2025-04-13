@@ -1,9 +1,9 @@
 ---
 layout: ../layouts/Layout.astro
-title: MARS: a Multimodal Alignment and Ranking System for Few-Shot Segmentation
-description: Project page for the paper "MARS: a Multimodal Alignment and Ranking System for Few-Shot Segmentation"
+title: "MARS: a Multimodal Alignment and Ranking System for Few-Shot Segmentation"
+description: "Project page for the paper 'MARS: a Multimodal Alignment and Ranking System for Few-Shot Segmentation'"
 favicon: favicon.svg
-thumbnail: screenshot-light.png
+thumbnail: mars_pipe_overview.svg
 ---
 
 import Header from "../components/Header.astro";
@@ -23,6 +23,7 @@ import transformer from "../assets/transformer.webp";
 import Splat from "../components/Splat.tsx"
 import dogsDiffc from "../assets/dogs-diffc.png"
 import dogsTrue from "../assets/dogs-true.png"
+import marsPipeOverview from "../assets/mars_pipe_overview_new.svg";
 
 
 import CodeBlock from "../components/CodeBlock.astro";
@@ -62,10 +63,6 @@ export const components = {pre: CodeBlock, table: Table}
       symbol: "*",
       text: "Equal contribution",
     },
-    {
-      symbol: "†",
-      text: "author note two",
-    },
   ]}
   links={[
     {
@@ -83,15 +80,13 @@ export const components = {pre: CodeBlock, table: Table}
       url: "https://arxiv.org/abs/2504.07942",
       icon: "academicons:arxiv",
     },
-    {
-      name: "Bluesky",
-      url: "",
-      icon: "ri:bluesky-line"
-    }
   ]}
   />
 
-<Video source={outside} />
+<Figure>
+  <Image slot="figure" source={marsPipeOverview} altText="High level overview of the MARS pipeline." />
+  <span slot="caption">High level overview of the MARS pipeline.</span>
+</Figure>
 
 <HighlightedSection>
 
