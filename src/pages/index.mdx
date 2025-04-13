@@ -1,7 +1,7 @@
 ---
 layout: ../layouts/Layout.astro
-title: Research Project Page Template
-description: Simple project page template for your research paper, built with Astro and Tailwind CSS
+title: MARS: a Multimodal Alignment and Ranking System for Few-Shot Segmentation
+description: Project page for the paper "MARS: a Multimodal Alignment and Ranking System for Few-Shot Segmentation"
 favicon: favicon.svg
 thumbnail: screenshot-light.png
 ---
@@ -33,31 +33,34 @@ export const components = {pre: CodeBlock, table: Table}
   title={frontmatter.title}
   authors={[
     {
-      name: "Roman Hauksson",
-      url: "https://roman.technology",
-      institution: "Independent",
-      notes: ["*", "†"],
+      name: "Stefano Samele",
+      url: "https://scholar.google.com/citations?user=9eINCUAAAAAJ&hl=it",
+      institution: "Politecnico di Milano",
+      notes: ["*"],
     },
     {
-      name: "Author Two",
-      institution: "Institution Two",
-      notes: ["*", "†"],
+      name: "Nico Catalano",
+      url: "https://scholar.google.com/citations?user=ZrGxR2YAAAAJ&hl=en",
+      institution: "Politecnico di Milano",
+      notes: ["*"],
     },
     {
-      name: "Author Three",
-      institution: "Institution Three",
-      notes: ["†"],
+      name: "Paolo Pertino",
+      url: "https://scholar.google.com/citations?user=sGhbVfEAAAAJ&hl=en",
+      institution: "Politecnico di Milano",
+      notes: ["*"],
     },
     {
-      name: "Author Four",
-      institution: "Institution Four",
+      name: "Matteo Matteucci",
+      url: "https://scholar.google.it/citations?user=PdbEg5YAAAAJ&hl=it",
+      institution: "Politecnico di Milano",
     },
   ]}
   conference="Conference Name"
   notes={[
     {
       symbol: "*",
-      text: "author note one",
+      text: "Equal contribution",
     },
     {
       symbol: "†",
@@ -72,12 +75,12 @@ export const components = {pre: CodeBlock, table: Table}
     },
     {
       name: "Code",
-      url: "https://github.com/RomanHauksson/academic-project-astro-template",
+      url: "https://github.com/paolopertino/MARS-Multimodal-Alignment-and-Ranking-System-for-Few-Shot-Segmentation",
       icon: "ri:github-line",
     },
     {
       name: "arXiv",
-      url: "",
+      url: "https://arxiv.org/abs/2504.07942",
       icon: "academicons:arxiv",
     },
     {
@@ -94,7 +97,7 @@ export const components = {pre: CodeBlock, table: Table}
 
 ## Abstract
 
-This is a live demo for a template you can use to create a simple project page for your research paper. See the code for the template and instructions on how to use it yourself [here](https://github.com/RomanHauksson/academic-project-astro-template). It's made with the [Astro web framework](https://astro.build/) and styled with [Tailwind CSS](https://tailwindcss.com/). You write the content in [MDX](https://mdxjs.com/), which enables markdown formatting like **bold**, _italics_, and ~strikethrough~, as well as custom components like <SmallCaps>small caps.</SmallCaps>
+Current Few Shot Segmentation literature lacks a mask selection method that goes beyond visual similarity between the query and example images, leading to suboptimal predictions. We present MARS, a plug-and-play ranking system that leverages multimodal cues to filter and merge mask proposals robustly. Starting from a set of mask predictions for a single query image, we score, filter, and merge them to improve results. Proposals are evaluated using multimodal scores computed at local and global levels. Extensive experiments on COCO-20i, Pascal-5i, LVIS-92i, and FSS-1000 demonstrate that integrating all four scoring components is crucial for robust ranking, validating our contribution. As MARS can be effortlessly integrated with various mask proposal systems, we deploy it across a wide range of top-performer methods and achieve new state-of-the-art results on multiple existing benchmarks. Code will be available upon acceptance.
 
 </HighlightedSection>
 
