@@ -2,7 +2,7 @@
 layout: ../layouts/Layout.astro
 title: "MARS: a Multimodal Alignment and Ranking System for Few-Shot Segmentation"
 description: "Project page for the paper 'MARS: a Multimodal Alignment and Ranking System for Few-Shot Segmentation'"
-favicon: favicon.svg
+favicon: favicon1.svg
 thumbnail: mars_pipe_overview.svg
 ---
 
@@ -15,6 +15,8 @@ import Image from "../components/Image.astro";
 import TwoColumns from "../components/TwoColumns.astro";
 import YouTubeVideo from "../components/YouTubeVideo.astro";
 import LaTeX from "../components/LaTeX.astro";
+import ImageSlider from '../components/ImageSlider.tsx';
+import { Icon } from "astro-icon/components";
 
 import { ImageComparison } from "../components/ImageComparison.tsx";
 
@@ -24,6 +26,9 @@ import Splat from "../components/Splat.tsx"
 import dogsDiffc from "../assets/dogs-diffc.png"
 import dogsTrue from "../assets/dogs-true.png"
 import marsPipeOverview from "../assets/mars_pipe_overview_new.svg";
+import qualitativeResults1 from "../assets/QualitativeResults.svg";
+import qualitativeResults2 from "../assets/QualitativeResults_2.svg";
+import qualitativeResults3 from "../assets/QualitativeResults_3.svg";
 
 
 import CodeBlock from "../components/CodeBlock.astro";
@@ -57,7 +62,7 @@ export const components = {pre: CodeBlock, table: Table}
       institution: "Politecnico di Milano",
     },
   ]}
-  conference="Conference Name"
+  conference="? Conference Name ?"
   notes={[
     {
       symbol: "*",
@@ -96,74 +101,184 @@ Current Few Shot Segmentation literature lacks a mask selection method that goes
 
 </HighlightedSection>
 
-## Figures
+## Pipeline overview
+The MARS framework enhances few-shot segmentation by integrating multimodal information into a unified pipeline. It begins with a module that retrieves the essential textual cues from the support images. Using ViP-LLaVA, the system extracts the class name and obtains a detailed description via WordNet. In scenarios with multiple support images, a majority voting mechanism ensures that the consolidated textual information is both robust and reliable.
 
-Use the figure component to display images, videos, equations, or any other element, with an optional caption.
+Following this, the system aligns visual and textual modalities. A pre-trained CLIP model processes the query image along with two specialized text prompts—one emphasizing the presence of the object and one its absence—to generate an initial saliency map that highlights regions of interest. This map is refined by incorporating prior information, leading to a more precise localization of the target region.
 
-<Figure>
-  <Image slot="figure" source={transformer} altText="Diagram of the transformer deep learning architecture." />
-  <span slot="caption">Diagram of the transformer deep learning architecture.</span>
-</Figure>
+To address situations where visual features may not fully capture semantic nuances, the AlphaCLIP module is employed. This module fuses the class name with its detailed textual description to create a robust global conceptual score. By comparing the normalized image and text embeddings, it provides a semantic measure that verifies whether the mask proposals are aligned with the expected class characteristics.
 
-## Image comparison slider
+In parallel, the framework processes visual information exclusively. A Vision Transformer extracts detailed features from both the support and query images, producing metrics that capture overall visual similarity as well as fine-grained local correspondences. This results in the computation of both a global visual score and a local visual score, ensuring that the segmentation captures both holistic appearance and detailed structure.
 
-An interactive, accessible slider component with keyboard navigation.
-<Figure>
-  <ImageComparison slot="figure" client:load imageUrlOne={dogsDiffc.src} imageUrlTwo={dogsTrue.src} altTextOne="Photo of two dogs running side-by-side in shallow water, lossily compressed using the DiffC algorithm" altTextTwo="Original photo of two dogs running side-by-side in shallow water" />
-  <span slot="caption">A photo of two dogs running side-by-side in shallow water, lossily compressed using the <a href="https://jeremyiv.github.io/diffc-project-page/">DiffC algorithm</a>.</span>
-</Figure>
+Finally, all the computed scores are integrated in a filtering and merging stage. The Filtering-Merging Module combines the contributions of the local and global conceptual and visual scores into a single MARS score for each mask proposal. Through a dual-threshold strategy, low-confidence proposals are discarded and the remaining ones are merged to produce the final, refined segmentation mask.
 
-## Two columns
+## Quantitative results
+MARS, being a plug-and-play module, has been tested when applied to a variety of state-of-the-art few-shot segmentation methods, both under the one-shot and five-shot settings. 
 
-Use the two columns component to display two columns of content. In this example, the first column contains a figure with a YouTube video and the second column contains a figure with a custom [React](https://react.dev/) component. By default, they display side by side, but if the screen is narrow enough (for example, on mobile), they're arranged vertically.
+The results are shown in the tables below. The evaluation suite is composed of the <LaTeX inline formula="\text{COCO-20}^i" />, <LaTeX inline formula="\text{Pascal-5}^i" />, <LaTeX inline formula="\text{LVIS-92}^i" />, and <LaTeX inline formula="\text{FSS-100}" /> datasets. The results are reported in terms of the mean mean Intersection over Union (mIoU) metric.
 
-<TwoColumns>
-  <Figure slot="left">
-    <YouTubeVideo slot="figure" videoId="wjZofJX0v4M" />
-    <span slot="caption">Take a look at this YouTube video.</span>
-  </Figure>
-  <Figure slot="right">
-    <Splat slot="figure" client:idle />
-    <span slot="caption">Now look at this <a href="https://en.wikipedia.org/wiki/Gaussian_splatting">Gaussian splat</a>, rendered with a React component.</span>
-  </Figure>
-</TwoColumns>
+<table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse; width: 100%;">
+  <thead>
+    <tr>
+      <th>Method</th>
+      <th colspan="2"><LaTeX inline formula="\text{COCO-20}^i" /></th>
+      <th colspan="2"><LaTeX inline formula="\text{Pascal-5}^i" /></th>
+      <th colspan="2"><LaTeX inline formula="\text{LVIS-92}^i" /></th>
+      <th colspan="2"><LaTeX inline formula="\text{FSS-1000}" /></th>
+    </tr>
+    <tr>
+      <th></th>
+      <th>Original</th>
+      <th>+ MARS</th>
+      <th>Original</th>
+      <th>+ MARS</th>
+      <th>Original</th>
+      <th>+ MARS</th>
+      <th>Original</th>
+      <th>+ MARS</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>PerSAM</td>
+      <td>21.4</td>
+      <td><strong>28.8 (+7.4) </strong></td>
+      <td>43.1</td>
+      <td><strong>56.0 (+12.9) </strong></td>
+      <td>12.3</td>
+      <td><strong>13.6 (+1.3) </strong></td>
+      <td>75.0</td>
+      <td><strong>79.1 (+4.1) </strong></td>
+    </tr>
+    <tr>
+      <td>VRP-SAM</td>
+      <td>50.1</td>
+      <td><strong>52.6 (+2.5) </strong></td>
+      <td>69.2</td>
+      <td>67.6 (-1.6)</td>
+      <td>-</td>
+      <td>-</td>
+      <td>87.9</td>
+      <td>86.4 (-1.5)</td>
+    </tr>
+    <tr>
+      <td>SegGPT</td>
+      <td>54.5</td>
+      <td><strong>59.9 (+5.4) </strong></td>
+      <td>83.2</td>
+      <td><strong><u>84.1 (+0.9)</u> </strong></td>
+      <td>20.8</td>
+      <td><strong>24.0 (+3.2) </strong></td>
+      <td>83.3</td>
+      <td><strong>84.3</strong> (+1.0)</td>
+    </tr>
+    <tr>
+      <td>Matcher</td>
+      <td>52.7</td>
+      <td><strong>60.5 (+7.8) </strong></td>
+      <td>68.1</td>
+      <td><strong>77.2 (+9.1) </strong></td>
+      <td>33.0</td>
+      <td><strong>36.9 (+3.9) </strong></td>
+      <td>87.0</td>
+      <td>85.4 (-1.6)</td>
+    </tr>
+    <tr>
+      <td>GF-SAM</td>
+      <td>58.7</td>
+      <td><u><strong>61.9 (+3.2) </strong></u></td>
+      <td>72.1</td>
+      <td><strong>75.7 (+3.6) </strong></td>
+      <td>35.2</td>
+      <td><u><strong>38.7 (+3.5) </strong></u></td>
+      <td><u>88.0</u></td>
+      <td>87.0 (-1.0)</td>
+    </tr>
+  </tbody>
+  <caption style="caption-side: bottom; margin-top: 10px; text-align: left;">**Table 1: One-Shot Segmentation Results**. For each dataset, the table reports the original performance and the performance after applying MARS in terms of mIoU. In each column, we underlined the top performer method for a particular dataset.</caption>
+</table>
 
-## Heading levels
+<table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse; width: 100%;">
+  <thead>
+    <tr>
+      <th>Method</th>
+      <th colspan="2"><LaTeX inline formula="\text{COCO-20}^i" /></th>
+      <th colspan="2"><LaTeX inline formula="\text{Pascal-5}^i" /></th>
+      <th colspan="2"><LaTeX inline formula="\text{LVIS-92}^i" /></th>
+      <th colspan="2"><LaTeX inline formula="\text{FSS-1000}" /></th>
+    </tr>
+    <tr>
+      <th></th>
+      <th>Original</th>
+      <th>+ MARS</th>
+      <th>Original</th>
+      <th>+ MARS</th>
+      <th>Original</th>
+      <th>+ MARS</th>
+      <th>Original</th>
+      <th>+ MARS</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>SegGPT</td>
+      <td>61.2</td>
+      <td><strong>64.3 (+3.1) </strong></td>
+      <td>86.8</td>
+      <td><u><strong>87.8 (+1.0) </strong></u></td>
+      <td>22.4</td>
+      <td><strong>23.5 (+0.9) </strong></td>
+      <td>86.2</td>
+      <td><strong>86.3 (+0.1) </strong></td>
+    </tr>
+    <tr>
+      <td>Matcher</td>
+      <td>60.7</td>
+      <td><strong>63.6 (+2.9) </strong></td>
+      <td>74.0</td>
+      <td><strong>80.7 (+6.7) </strong></td>
+      <td>40.0</td>
+      <td><strong>40.5 (+0.5) </strong></td>
+      <td><u>89.6</u></td>
+      <td>87.6 (-2.0)</td>
+    </tr>
+    <tr>
+      <td>GF-SAM</td>
+      <td>66.8</td>
+      <td><u><strong>67.8 (+1.0) </strong></u></td>
+      <td>82.6</td>
+      <td>81.5 (-1.1)</td>
+      <td>44.0</td>
+      <td><u><strong>46.7 (+2.7) </strong></u></td>
+      <td>88.9</td>
+      <td>87.5 (-1.4)</td>
+    </tr>
+  </tbody>
+  <caption style="caption-side: bottom; margin-top: 10px; text-align: left;">**Table 2: Five-Shot Segmentation Results**. or each dataset, the table reports the original performance in terms of mIoU and the performance after applying MARS. In each column, we underlined the top performer method for a particular dataset.</caption>
+</table>
 
-Use headings to divide your content into sections.
+## Qualitative Results on the <LaTeX inline formula="\text{COCO-20}^i" /> dataset
 
-### Heading 3
+<ImageSlider images={[
+  "/QualitativeResults.svg",
+  "/QualitativeResults_2.svg",
+  "/QualitativeResults_3.svg",
+  ]}
+  interval={8000}
+  client:load
+/>
 
-Go down a level to heading 3...
-
-#### Heading 4
-
-...and down again to heading 4.
-
-## LaTeX
-
-You can also add LaTeX formulas, rendered during the build process using [KaTeX](https://katex.org/) so they're quick to load for visitors of your project page. You can write them inline, like this: <LaTeX inline formula="a^2 + b^2 = c^2" />. Or, you can write them as a block:
-
-<LaTeX formula="\int_a^b f(x) dx" />
-
-## Tables
-
-You can add simple tables using [GitHub Flavored Markdown syntax](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/organizing-information-with-tables):
-
-| Model | Accuracy | F1 score | Training time (hours) |
-| :--- | :---: | :---: | :---: |
-| BERT-base | 0.89 | 0.87 | 4.5 |
-| RoBERTa-large | 0.92 | 0.91 | 7.2 |
-| DistilBERT | 0.86 | 0.84 | 2.1 |
-| XLNet | 0.90 | 0.89 | 6.8 |
 
 ## BibTeX citation
 
 ```bibtex
-@misc{roman2024academic,
-  author = "{Roman Hauksson}",
-  title = "Academic Project Page Template",
-  year = "2024",
-  howpublished = "\url{https://research-template.roman.technology}",
+@misc{catalano2025marsmultimodalalignmentranking,
+      title={MARS: a Multimodal Alignment and Ranking System for Few-Shot Segmentation}, 
+      author={Nico Catalano and Stefano Samele and Paolo Pertino and Matteo Matteucci},
+      year={2025},
+      eprint={2504.07942},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV},
+      url={https://arxiv.org/abs/2504.07942}, 
 }
 ```
