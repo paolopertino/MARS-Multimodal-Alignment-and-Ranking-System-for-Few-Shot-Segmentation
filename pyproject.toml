@@ -3,7 +3,10 @@ name = "mars-multimodal-alignment-and-ranking-system-for-few-shot-segmentation"
 version = "0.1.0"
 description = "Package for the official implementation of \"MARS: a Multimodal Ament and Ranking System for Few-Shot Segmentation\""
 authors = [
-    {name = "Paolo Pertino",email = "paolo.pertino@mail.polimi.it"}
+    {name = "Paolo Pertino",email = "paolo.pertino@mail.polimi.it"},
+    {name = "Stefano Samele",email = "stefano.samele@polimi.it"},
+    {name = "Nico Catalano",email = "nico.catalano@polimi.it"},
+    {name = "Matteo Matteucci",email = "matteo.matteucci@polimi.it"}
 ]
 readme = "README.md"
 requires-python = "3.10.14"
