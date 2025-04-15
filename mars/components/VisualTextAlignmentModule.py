@@ -28,7 +28,7 @@ class VisualTextAlignmentModule:
         model_patch_size: int,
         model_embedding_spatial_dimensions: int,
         model_num_regs: int,
-        rva_refinement_box_threshold: float,
+        vta_refinement_box_threshold: float,
         last_n_attention_maps_for_refinement: int,
     ):
         self.model = model
@@ -38,7 +38,7 @@ class VisualTextAlignmentModule:
         self.model_num_regs = model_num_regs
     
         self.pir = PriorInformationRefinementModule(
-            box_threshold=rva_refinement_box_threshold,
+            box_threshold=vta_refinement_box_threshold,
             last_n_attention_maps_for_refinement=last_n_attention_maps_for_refinement,
             num_regs=model_num_regs
         )
@@ -73,10 +73,10 @@ class VisualTextAlignmentModule:
 def build_visual_text_alignment_component(args):
     vtp_model, _ = BackboneLoader.load_backbone(
         backbone_name='clip',
-        backbone_size=args.vtp_backbone,
+        backbone_size=args.vta_backbone,
         encoder_kwargs={'device': args.device, 'download_root': args.models_path}
     )
-    vtp_model_patch_size = int(args.vtp_backbone[-2:])
+    vtp_model_patch_size = int(args.vta_backbone[-2:])
     embedding_spatial_dimensions = int(np.ceil(int(args.input_size) / vtp_model_patch_size)* vtp_model_patch_size)
     vtp_transforms = transforms.Compose([
         transforms.Resize((embedding_spatial_dimensions, embedding_spatial_dimensions), interpolation=BICUBIC),
@@ -90,6 +90,6 @@ def build_visual_text_alignment_component(args):
         model_patch_size=vtp_model_patch_size,
         model_embedding_spatial_dimensions=embedding_spatial_dimensions,
         model_num_regs=0,
-        rva_refinement_box_threshold=args.rva_refinement_box_threshold,
-        last_n_attention_maps_for_refinement=args.last_n_attn_for_rva_refinement,
+        vta_refinement_box_threshold=args.vta_refinement_box_threshold,
+        last_n_attention_maps_for_refinement=args.last_n_attn_for_vta_refinement,
     )

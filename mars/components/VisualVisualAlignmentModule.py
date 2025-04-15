@@ -133,7 +133,7 @@ def build_visual_visual_alignment_component(args):
         backbone_name='dinov2',
         backbone_size=args.dino_backbone,
         device=args.device,
-        backbone_weights_path=os.path.join(args.models_path, 'dinov2_vitl14_reg4_pretrain.pth') if num_regs == 4 else os.path.join(args.models_path, 'dinov2_vitl14_pretrain.pth'),
+        backbone_weights_path=os.path.join(args.models_path, 'dinov2_vitl14_reg4_pretrain.pth') if args.num_regs == 4 else os.path.join(args.models_path, 'dinov2_vitl14_pretrain.pth'),
         encoder_kwargs=dino_kwargs
     )
     vvp_model_patch_size = dino_kwargs['patch_size']

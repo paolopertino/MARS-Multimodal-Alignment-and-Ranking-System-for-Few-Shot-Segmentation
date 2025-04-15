@@ -458,7 +458,7 @@ def build_text_retriever_component(args):
         zoom_pctg=args.zoom_percentage,
         color=args.color,
         thickness=args.thickness,
-        alpha=args.alpha
+        alpha=args.alpha_blending
     )
     
     # Loading the VLM possibly quantized at either 4 or 8 bits
@@ -479,7 +479,7 @@ def build_text_retriever_component(args):
     return TextRetrieverModule(
         vlm=vlm_model,
         vlm_processor=vlm_processor,
-        prompt_generator=VISUAL_PROMPT_GENERATORS[args.visual_prompt_type],
+        prompt_generator=VISUAL_PROMPT_GENERATORS[args.prompt_type],
         vlm_ensamble_config=vlm_ensamble_config,
         vlm_prompt_generation_config=vlm_prompt_generation_config,
         

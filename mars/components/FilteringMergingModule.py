@@ -37,7 +37,7 @@ class FilteringMergingModule:
         cost_matrix: torch.Tensor,
         patch_features_spatial_dimension: int,
         vva: torch.Tensor,
-        rva: torch.Tensor,
+        vta: torch.Tensor,
         text: list[str]
     ) -> torch.Tensor:
         scored_masks = self._score_proposals(
@@ -47,7 +47,7 @@ class FilteringMergingModule:
             cost_matrix=cost_matrix,
             patch_features_spatial_dimension=patch_features_spatial_dimension,
             vva=vva,
-            rva=rva,
+            vta=vta,
             text=text
         )
         
@@ -61,10 +61,10 @@ class FilteringMergingModule:
         cost_matrix: torch.Tensor,
         patch_features_spatial_dimension: int,
         vva: torch.Tensor,
-        rva: torch.Tensor,
+        vta: torch.Tensor,
         text: list[str]
     ) -> list[tuple[torch.Tensor, float]]:
-        rva = rva.cpu().numpy()
+        vta = vta.cpu().numpy()
         vva = vva.cpu().numpy()
         pooled_support_mask = F.adaptive_max_pool2d(
             support_mask.permute(1, 0, 2, 3).float(), 
@@ -87,7 +87,7 @@ class FilteringMergingModule:
             ).squeeze(0)
             coverage_m_p = np.sum(pooled_m_p.cpu().numpy() > 0) / (1e-7 + np.sum(pooled_mask_union))
             m_p_alignment_pvv = np.sum(vva[pooled_m_p.cpu().numpy() > 0]) / (1e-7 + np.sum(pooled_m_p.cpu().numpy() > 0))
-            m_p_alignment_pvt = np.sum(rva[pooled_m_p.cpu().numpy() > 0]) / (1e-7 + np.sum(pooled_m_p.cpu().numpy() > 0))
+            m_p_alignment_pvt = np.sum(vta[pooled_m_p.cpu().numpy() > 0]) / (1e-7 + np.sum(pooled_m_p.cpu().numpy() > 0))
             img_feats, text_feats = self._compute_alphaclip_feats(
                 query_img[0], 
                 m_p, 
@@ -208,6 +208,8 @@ def build_filtering_and_merging_module(args):
         alpha_clip_model=alphaclip_model,
         img_transforms=alphaclip_img_transforms,
         mask_transforms=alphaclip_mask_transforms,
-        alpha=args.coverage_alpha,
+        alpha=args.alpha_coverage,
+        static_threshold=args.static_threshold,
+        dynamic_threshold=args.dynamic_threshold,
         device=args.device
     )

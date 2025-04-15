@@ -1,4 +1,4 @@
-r""" Helper functions. Taken from Matcher"""
+r""" Helper functions """
 import random
 
 import torch

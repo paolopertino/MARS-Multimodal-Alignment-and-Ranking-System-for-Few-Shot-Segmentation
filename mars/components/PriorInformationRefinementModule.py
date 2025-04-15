@@ -32,7 +32,7 @@ class PriorInformationRefinementModule:
         )[-self.last_n_attention_maps_for_refinement:]
         
         # Taking the mean of the retained attention blocks and among all the heads
-        # TODO: might change between VVA and RVA. This code should work for VVA
+        # TODO: might change between VVA and VTA. This code should work for VVA
         attention_maps = torch.mean(attention_maps, dim=(0, 1))
         attention_maps = attention_maps.float()
 

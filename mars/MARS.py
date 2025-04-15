@@ -58,20 +58,20 @@ class MARS:
         )
         
         # Extracting the local-conceptual information.
-        rva = self.visual_text_alignment_component.compute(
+        vta = self.visual_text_alignment_component.compute(
             query_image=query_image,
             fg_label=entity_of_interest_name,
             bg_labels=[]
         )
-        # The rva and vva dimensions should be the same.
-        # The rva extraction component does not apply the final
+        # The vta and vva dimensions should be the same.
+        # The vta extraction component does not apply the final
         # min-max scale so we apply it here
-        rva = F.interpolate(
-            rva.unsqueeze(0).unsqueeze(0),
+        vta = F.interpolate(
+            vta.unsqueeze(0).unsqueeze(0),
             vva.shape,
             mode='nearest'
         ).squeeze(0).squeeze(0)
-        rva = (rva - rva.min()) / (1e-7 + rva.max() - rva.min())
+        vta = (vta - vta.min()) / (1e-7 + vta.max() - vta.min())
         
         # Preparing the text for global-conceptual score computation.
         text_alpha_clip = []
@@ -88,7 +88,7 @@ class MARS:
             cost_matrix=self.visual_visual_alignment_component.cost_matrix,
             patch_features_spatial_dimension=self.visual_visual_alignment_component.model_embedding_spatial_dimensions,
             vva=vva,
-            rva=rva,
+            vta=vta,
             text=text_alpha_clip
         )
 
