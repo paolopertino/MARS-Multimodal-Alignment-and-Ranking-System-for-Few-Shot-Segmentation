@@ -50,5 +50,5 @@ Create a directory 'datasets' for the above datasets and appropriately place eac
     │   ├── lvis_train.pkl
     │   └── lvis_val.pkl
 
-## Acknowledgements
-:gem: This file has been taken from Matcher. We thank [Matcher's Authors](<https://www.google.com/url?sa=t&source=web&rct=j&opi=89978449&url=https://github.com/aim-uofa/Matcher&ved=2ahUKEwj63bbui7eMAxWhif0HHY2bKTYQFnoECBkQAQ&usg=AOvVaw0OG-AMv31nPFN35lW4zWeS>) for providing this resource.
+## :star2: Acknowledgements
+This file has been taken from Matcher. We thank [Matcher's Authors](<https://www.google.com/url?sa=t&source=web&rct=j&opi=89978449&url=https://github.com/aim-uofa/Matcher&ved=2ahUKEwj63bbui7eMAxWhif0HHY2bKTYQFnoECBkQAQ&usg=AOvVaw0OG-AMv31nPFN35lW4zWeS>) for providing this resource.
