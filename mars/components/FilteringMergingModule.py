@@ -193,6 +193,7 @@ class FilteringMergingModule:
         return merged_mask
     
 def build_filtering_and_merging_module(args):
+    print('[FilteringMergingModule] - Loading Filtering and Merging Module...')
     alphaclip_model, alphaclip_transforms = BackboneLoader.load_backbone(
         backbone_name='alphaclip',
         backbone_size='ViT-L/14@336px',
@@ -203,6 +204,8 @@ def build_filtering_and_merging_module(args):
 
     alphaclip_img_transforms = alphaclip_transforms[0]
     alphaclip_mask_transforms = alphaclip_transforms[1]
+    
+    print('[FilteringMergingModule] - Filtering and Merging Module loaded.')
     
     return FilteringMergingModule(
         alpha_clip_model=alphaclip_model,

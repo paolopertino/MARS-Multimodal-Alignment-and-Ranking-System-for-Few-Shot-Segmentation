@@ -442,6 +442,7 @@ class EnsambleConfig:
         return False
     
 def build_text_retriever_component(args):
+    print("[TextRetrieverModule] - Loading Text Retriever Module...")
     # Mapping the VLM on the second GPU if more than 1 are available, otherwise choose automatically.
     device_map = {"": 1} if torch.cuda.is_available() and torch.cuda.device_count() > 1 else "auto"
     
@@ -475,6 +476,7 @@ def build_text_retriever_component(args):
     vlm_processor = AutoProcessor.from_pretrained(
         "llava-hf/vip-llava-7b-hf")
     
+    print("[TextRetrieverModule] - Text Retriever Module loaded.")
     
     return TextRetrieverModule(
         vlm=vlm_model,

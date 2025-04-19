@@ -134,8 +134,6 @@ if __name__ == '__main__':
     parser.add_argument('--num_regs', type=int, default=4)
     parser.add_argument('--vva_refinement_box_threshold', type=float, default=0.8)
     parser.add_argument('--last_n_attn_for_vva_refinement', type=int, default=24)
-    parser.add_argument('--use_vva_mix', action='store_true', help='Use both max and mean aggregation functions applied to the similarity matrix. If False, only max aggregation is used.')
-    parser.add_argument('--use_negative_prior', action='store_true', help='Use both foreground and background information when computing the VVA. If False, only FG info is used.')
     
     # Filtering and Merging Component parameters
     parser.add_argument('--static_threshold', type=float, default=0.55)

@@ -116,6 +116,7 @@ class VisualVisualAlignmentModule:
         return feats
     
 def build_visual_visual_alignment_component(args):
+    print("[VVA] - Loading VVA module...")
     # DINOv2, Image Encoder
     dino_kwargs = dict(
         img_size=args.input_size,
@@ -139,6 +140,8 @@ def build_visual_visual_alignment_component(args):
     vvp_model_patch_size = dino_kwargs['patch_size']
     embedding_spatial_dimensions = args.input_size // dino_kwargs['patch_size']
     
+    print(f"[VVA] - VVA model loaded with patch size {vvp_model_patch_size} and embedding spatial dimensions {embedding_spatial_dimensions}")
+    
     return VisualVisualAlignmentModule(
         model=vvp_model,
         model_transforms=vvp_transforms,
@@ -147,6 +150,4 @@ def build_visual_visual_alignment_component(args):
         model_num_regs=args.num_regs,
         vva_refinement_box_threshold=args.vva_refinement_box_threshold,
         last_n_attention_maps_for_refinement=args.last_n_attn_for_vva_refinement,
-        use_vva_mix=args.use_vva_mix,
-        use_negative_prior=args.use_negative_prior
     )

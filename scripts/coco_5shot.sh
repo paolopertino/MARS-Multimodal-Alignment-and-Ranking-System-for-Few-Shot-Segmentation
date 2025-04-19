@@ -27,8 +27,6 @@ do
     --num_regs 4 \
     --vva_refinement_box_threshold 0.8 \
     --last_n_attn_for_vva_refinement 24 \
-    --use_vva_mix \
-    --use_negative_prior \
     --static_threshold 0.55 \
     --dynamic_threshold 0.95 \
     --alpha_coverage 0.85 \
