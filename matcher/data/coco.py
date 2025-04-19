@@ -70,10 +70,8 @@ class DatasetCOCO(Dataset):
 
     def build_class_ids(self):
         nclass_trn = self.nclass // self.nfolds
-        class_ids_val = [self.fold + self.nfolds *
-                         v for v in range(nclass_trn)]
-        class_ids_trn = [x for x in range(
-            self.nclass) if x not in class_ids_val]
+        class_ids_val = [self.fold + self.nfolds * v for v in range(nclass_trn)]
+        class_ids_trn = [x for x in range(self.nclass) if x not in class_ids_val]
         class_ids = class_ids_trn if self.split == 'trn' else class_ids_val
 
         return class_ids
