@@ -32,7 +32,7 @@ do
     --static_threshold 0.55 \
     --dynamic_threshold 0.95 \
     --alpha_coverage 0.85 \
-    --log_root_path "/home/pertino/exp/MARS-Multimodal-Alignment-and-Ranking-System-for-Few-Shot-Segmentation/output/mars/coco/fold${fold}" \
+    --log_root_path /home/pertino/exp/MARS-Multimodal-Alignment-and-Ranking-System-for-Few-Shot-Segmentation/output/mars/coco/fold${fold} \
     --exp_name 5shot
 done
 wait

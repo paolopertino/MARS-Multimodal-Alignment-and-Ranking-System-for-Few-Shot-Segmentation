@@ -25,7 +25,7 @@ def test_MARS(args):
     
     # Setting up the dataset
     FSSDataset.initialize(
-        img_size=args.img_size, 
+        img_size=args.input_size, 
         datapath=args.dataset_path,
         use_original_imgsize=False
     )
