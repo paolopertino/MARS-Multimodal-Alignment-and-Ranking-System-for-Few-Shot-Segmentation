@@ -101,7 +101,8 @@ if __name__ == '__main__':
     parser.add_argument('--benchmark', type=str, default='coco', choices=['fss', 'coco', 'pascal5i', 'lvis'])
     parser.add_argument('--nworker', type=int, default=0)
     parser.add_argument('--nshot', type=int, default=1, choices=[1, 5])
-    parser.add_argument('--fold', type=int, nargs='+', default=[0, 1, 2, 3])
+    # parser.add_argument('--folds', type=int, nargs='+', default=[0, 1, 2, 3])
+    parser.add_argument('--fold', type=int, default=0)
     parser.add_argument('--input_size', type=int, default=518)
     
     # General models parameters
