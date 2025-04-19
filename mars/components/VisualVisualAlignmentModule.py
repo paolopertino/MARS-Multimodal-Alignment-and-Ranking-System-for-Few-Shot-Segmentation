@@ -20,16 +20,19 @@ class VisualVisualAlignmentModule:
         model_num_regs: int,
         vva_refinement_box_threshold: float,
         last_n_attention_maps_for_refinement: int,
+        device
     ):
         self.model = model
         self.model_transforms = model_transforms
         self.model_patch_size = model_patch_size
         self.model_embedding_spatial_dimensions = model_embedding_spatial_dimensions
         self.model_num_regs = model_num_regs
-    
+        self.device = device
+
         self.pir = PriorInformationRefinementModule(
             box_threshold=vva_refinement_box_threshold,
             last_n_attention_maps_for_refinement=last_n_attention_maps_for_refinement,
+            device=device,
             num_regs=model_num_regs
         )
         
@@ -53,13 +56,18 @@ class VisualVisualAlignmentModule:
         :return: Returns the refined visual-visual alignment, with shape [H, W]
         :rtype: torch.Tensor
         """
+        # Moving all the input tensors to the correct device.
+        support_imgs = support_imgs.to(self.device)
+        support_masks = support_masks.to(self.device)
+        query_img = query_img.to(self.device)
+        
         # Extracting visual patch features and matching them to produce a 
         # similarity matrix. 
         visual_support_feats = self._extract_patch_features(support_imgs[0])
         visual_query_feats = self._extract_patch_features(query_img)
-        visual_attention_maps = list(self.model.get_last_self_attention(self.model_transforms(query_img[0]).unsqueeze(0).cuda()))
+        visual_attention_maps = list(self.model.get_last_self_attention(self.model_transforms(query_img[0]).unsqueeze(0).to(self.device)))
         self.similarity_matrix = torch.matmul(visual_support_feats, visual_query_feats.T).cpu()
-        self.cost_matrix = (1 - similarity_matrix) / 2
+        self.cost_matrix = (1 - self.similarity_matrix) / 2
         
         pooled_support_mask = F.adaptive_max_pool2d(
             support_masks.permute(1, 0, 2, 3).float(), 
@@ -80,14 +88,17 @@ class VisualVisualAlignmentModule:
         vva = vva_mean * vva_max
         
         # Computing background VVA
-        vva_max_bg = anti_similarity_matrix.max(dim=0).values.reshape(
-            (self.model_embedding_spatial_dimensions, self.model_embedding_spatial_dimensions)
-        )
-        vva_mean_bg = anti_similarity_matrix.mean(dim=0).reshape(
-            (self.model_embedding_spatial_dimensions, self.model_embedding_spatial_dimensions)
-        )
-        vva_bg = vva_mean_bg * vva_max_bg
-        vva -= vva_bg
+        if anti_similarity_matrix.shape[0] != 0:
+            vva_max_bg = anti_similarity_matrix.max(dim=0).values.reshape(
+                (self.model_embedding_spatial_dimensions, self.model_embedding_spatial_dimensions)
+            )
+            vva_mean_bg = anti_similarity_matrix.mean(dim=0).reshape(
+                (self.model_embedding_spatial_dimensions, self.model_embedding_spatial_dimensions)
+            )
+            vva_bg = vva_mean_bg * vva_max_bg
+            vva -= vva_bg
+        else:
+            print("[VVA] - No background VVA computed, only foreground VVA.")
         vva = (vva - vva.min()) / (1e-7 + vva.max() - vva.min())
         
         # Refining the VVA
@@ -102,7 +113,7 @@ class VisualVisualAlignmentModule:
     def _extract_patch_features(self, imgs):
         imgs = torch.cat(
             [
-                self.model_transforms(i).unsqueeze(0).cuda() for i in imgs
+                self.model_transforms(i).unsqueeze(0).to(self.device) for i in imgs
             ],
             dim=0
         )
@@ -150,4 +161,5 @@ def build_visual_visual_alignment_component(args):
         model_num_regs=args.num_regs,
         vva_refinement_box_threshold=args.vva_refinement_box_threshold,
         last_n_attention_maps_for_refinement=args.last_n_attn_for_vva_refinement,
+        device=args.device
     )

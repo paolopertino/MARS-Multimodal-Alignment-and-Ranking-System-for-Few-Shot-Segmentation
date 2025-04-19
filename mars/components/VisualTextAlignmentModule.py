@@ -30,16 +30,19 @@ class VisualTextAlignmentModule:
         model_num_regs: int,
         vta_refinement_box_threshold: float,
         last_n_attention_maps_for_refinement: int,
+        device
     ):
         self.model = model
         self.model_transforms = model_transforms
         self.model_patch_size = model_patch_size
         self.model_embedding_spatial_dimensions = model_embedding_spatial_dimensions
         self.model_num_regs = model_num_regs
+        self.device = device
     
         self.pir = PriorInformationRefinementModule(
             box_threshold=vta_refinement_box_threshold,
             last_n_attention_maps_for_refinement=last_n_attention_maps_for_refinement,
+            device=device,
             num_regs=model_num_regs
         )
         
@@ -58,13 +61,13 @@ class VisualTextAlignmentModule:
         )
         
         unrefined_cam, attn_maps_list = cam(
-            image=query_image,
+            image=query_image[0],
             foreground_label=fg_label,
             all_labels=bg_labels
         )
         
         refined_cam = self.pir.compute(
-            prior=unrefined_cam,
+            prior=torch.Tensor(unrefined_cam),
             attn_maps=attn_maps_list
         )
         
@@ -94,4 +97,5 @@ def build_visual_text_alignment_component(args):
         model_num_regs=0,
         vta_refinement_box_threshold=args.vta_refinement_box_threshold,
         last_n_attention_maps_for_refinement=args.last_n_attn_for_vta_refinement,
+        device=args.device
     )

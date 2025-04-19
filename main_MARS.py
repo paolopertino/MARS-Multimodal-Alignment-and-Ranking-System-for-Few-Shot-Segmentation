@@ -55,7 +55,7 @@ def test_MARS(args):
         query_img, query_mask, support_imgs, support_masks, class_idx, query_img_name = \
             batch['query_img'], batch['query_mask'], \
             batch['support_imgs'], batch['support_masks'], \
-            batch['class_id'].item(), batch['query_name']
+            batch['class_id'], batch['query_name']
         
         # Loading set of pre-generated mask proposals
         mask_proposals = torch.load(os.path.join(args.mask_proposals_path, f'{args.fold}_{idx}.pt'))
@@ -65,7 +65,7 @@ def test_MARS(args):
             support_masks=support_masks,
             query_image=query_img,
             mask_proposals=mask_proposals
-        )
+        ).unsqueeze(0).to(args.device)
         
         # Updating the metrics
         area_inter, area_union = Evaluator.classify_prediction(predicted_mask.clone(), batch)

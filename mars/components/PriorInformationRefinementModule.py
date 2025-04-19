@@ -9,10 +9,12 @@ class PriorInformationRefinementModule:
         self,
         box_threshold: float,
         last_n_attention_maps_for_refinement: int,
+        device,
         num_regs: int = 0,
     ):
         self.threshold = box_threshold
         self.last_n_attention_maps_for_refinement = last_n_attention_maps_for_refinement
+        self.device = device
         self.num_regs = num_regs
     
     def compute(
@@ -26,15 +28,22 @@ class PriorInformationRefinementModule:
         # Discarding the attention weights from/to cls token and possible register
         # tokens, and keeping only the last self.last_n_attention_maps_for_refinement
         # attention blocks.
-        attention_maps = torch.stack(
-            [aw[0, :, 1+self.num_regs:, 1+self.num_regs:] for aw in attn_maps], 
-            dim=0
-        )[-self.last_n_attention_maps_for_refinement:]
+        if len(attn_maps[0].shape) == 4:
+            attention_maps = torch.stack(
+                [aw[0, :, 1+self.num_regs:, 1+self.num_regs:] for aw in attn_maps], 
+                dim=0
+            )[-self.last_n_attention_maps_for_refinement:]
+        else:
+            attention_maps = torch.stack(
+                [aw[:, 1+self.num_regs:, 1+self.num_regs:] for aw in attn_maps], 
+                dim=0
+            )[-self.last_n_attention_maps_for_refinement:]
         
         # Taking the mean of the retained attention blocks and among all the heads
         # TODO: might change between VVA and VTA. This code should work for VVA
         attention_maps = torch.mean(attention_maps, dim=(0, 1))
         attention_maps = attention_maps.float()
+        attention_maps = attention_maps.to(self.device)
 
         # Calculating the matrix B. As PI-CLIP/CLIP-ES paper suggest
         # the matrix B is obtained by threhsolding the initial GradCAM.
@@ -48,7 +57,7 @@ class PriorInformationRefinementModule:
         )
         B = torch.zeros(
             (prior.shape[0], prior.shape[1])
-        ).cuda()
+        ).to(self.device)
         
         for i_ in range(cnt):
             x0_, y0_, x1_, y1_ = box[i_]
@@ -73,7 +82,7 @@ class PriorInformationRefinementModule:
         R_B = R * B
         
         # Refining the initial prior
-        prior = torch.FloatTensor(prior).cuda()
+        prior = torch.FloatTensor(prior).to(self.device)
         refined_prior = torch.matmul(
             R_B, prior.view(-1, 1)
         ).reshape(original_prior_shape)

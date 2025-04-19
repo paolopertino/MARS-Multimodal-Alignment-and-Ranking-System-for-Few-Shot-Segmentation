@@ -51,12 +51,12 @@ class TextRetrieverModule:
         # extracted through majority voting.
         for s_img, s_mask in zip(support_images[0], support_masks[0]):
             support_img_numpy = np.array(transforms.ToPILImage()(s_img).convert("RGB"))
-            support_mask_numpy = s_mask.numpy()
+            support_mask_numpy = s_mask.cpu().numpy()
             if not self.vlm_ensamble_config.is_ensamble():
                 # Draw Visual Prompt on top of the support image.
                 prompted_image_np = self.visual_prompt_generator.draw(
-                    image=s_img,
-                    mask=s_mask, 
+                    image=support_img_numpy,
+                    mask=support_mask_numpy, 
                     color=COLORS[self.vlm_prompt_generation_config.color],
                     alpha=self.vlm_prompt_generation_config.alpha,
                     thickness=self.vlm_prompt_generation_config.thickness,
@@ -101,14 +101,14 @@ class TextRetrieverModule:
         # Fetching a definition for the extracted entity of interest
         pred_description = None
         prompted_image_np = self.visual_prompt_generator.draw(
-            image=s_img,
-            mask=s_mask, 
+            image=support_img_numpy,
+            mask=support_mask_numpy, 
             color=COLORS[self.vlm_prompt_generation_config.color],
             alpha=self.vlm_prompt_generation_config.alpha,
             thickness=self.vlm_prompt_generation_config.thickness,
             zoom_percent=self.vlm_prompt_generation_config.zoom_pctg
         )
-        prompt = VISUAL_PROMPTS_DESCRIPTIONS_VLM_VIP_LLAVA[self.vlm_prompt_generation_config.prompt_type].format(result_name, self.vlm_prompt_generation_config.color)
+        prompt = VISUAL_PROMPTS_DESCRIPTIONS_VLM_VIP_LLAVA[self.vlm_prompt_generation_config.prompt_type].format(result_name, self.vlm_prompt_generation_config.color, result_name, result_name)
         prompt = SYSTEM_PROMPT_TEMPLATE_VLM_VIP_LLAVA.format(prompt)
         prompted_image = self.vlm_processor(
             text=prompt, 
@@ -131,7 +131,9 @@ class TextRetrieverModule:
             wn_description = wn.synset(wn_synset_for_class_name).definition()
         else:
             wn_description = ''
-            
+        
+        print(f"[TextRetrieverModule] - Class name: {result_name} - Description: {wn_description}")
+        
         return result_name, wn_description
     
     def _get_synset(self, class_name: str, vlm_description: str):

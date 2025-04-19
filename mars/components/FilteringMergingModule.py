@@ -8,6 +8,8 @@ import torch.nn.functional as F
 
 from torchvision import transforms
 
+from alpha_clip import tokenize as alpha_clip_tokenizer
+
 from utils.backbone_loader import BackboneLoader
 
 class FilteringMergingModule:
@@ -64,8 +66,9 @@ class FilteringMergingModule:
         vta: torch.Tensor,
         text: list[str]
     ) -> list[tuple[torch.Tensor, float]]:
-        vta = vta.cpu().numpy()
-        vva = vva.cpu().numpy()
+        vta = vta.detach().cpu().numpy()
+        vva = vva.detach().cpu().numpy()
+        
         pooled_support_mask = F.adaptive_max_pool2d(
             support_mask.permute(1, 0, 2, 3).float(), 
             (patch_features_spatial_dimension, patch_features_spatial_dimension)
@@ -94,7 +97,7 @@ class FilteringMergingModule:
                 text
             )
             emd_score = self._compute_emd(
-                pooled_support_mask,
+                pooled_support_mask.cpu(),
                 pooled_m_p,
                 cost_matrix
             )
@@ -162,7 +165,7 @@ class FilteringMergingModule:
     ) -> tuple[torch.Tensor, torch.Tensor]:
         image_np = image.permute(1,2,0).cpu().numpy()
         image_alpha_clip = self.img_transforms(image_np).unsqueeze(0).half().to(self.device)
-        tokenized_text = self.alpha_clip_model.tokenize(text).to(self.device)
+        tokenized_text = alpha_clip_tokenizer(text).to(self.device)
         
         with torch.no_grad():
             text_features = self.alpha_clip_model.encode_text(tokenized_text)
