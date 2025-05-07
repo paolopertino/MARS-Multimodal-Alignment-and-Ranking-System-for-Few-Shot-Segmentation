@@ -32,7 +32,7 @@ class MARS:
         query_image: torch.Tensor,
         mask_proposals: Optional[torch.Tensor] = None
     ):
-        # If not mask proposals are passed and no mask generator
+        # If no mask proposals are passed and no mask generator
         # has been set, MARS cannot work.
         assert (mask_proposals != None or self.mask_generator != None)
         
