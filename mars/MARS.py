@@ -1,4 +1,5 @@
 """Definition of the MARS pipeline: Multimodal Alignment and Ranking System for Few-Shot Segmentation"""
+import time
 
 from typing import Optional
 
@@ -25,6 +26,10 @@ class MARS:
         self.filtering_merging_component = filtering_merging_component
         self.mask_generator = mask_generator
         
+        self.time_start_ranking = None
+        self.time_start_ranking_after_text_extraction = None
+        self.time_end_ranking = None
+        
     def predict(
         self,
         support_images: torch.Tensor,
@@ -32,6 +37,7 @@ class MARS:
         query_image: torch.Tensor,
         mask_proposals: Optional[torch.Tensor] = None
     ):
+        self.time_start_ranking = time.time()
         # If no mask proposals are passed and no mask generator
         # has been set, MARS cannot work.
         assert (mask_proposals != None or self.mask_generator != None)
@@ -49,6 +55,8 @@ class MARS:
             support_images=support_images,
             support_masks=support_masks,
         )
+        
+        self.time_start_ranking_after_text_extraction = time.time()
         
         # Extracting the local-visual information.
         vva = self.visual_visual_alignment_component.compute(
@@ -81,7 +89,7 @@ class MARS:
             text_alpha_clip = [f'a {entity_of_interest_name}, {entity_of_interest_description}.']
         
         # Scoring, filtering, and merging the mask proposals
-        return self.filtering_merging_component.compute(
+        predicted_mask = self.filtering_merging_component.compute(
             query_img=query_image,
             mask_proposals=mask_proposals,
             support_mask=support_masks,
@@ -91,6 +99,9 @@ class MARS:
             vta=vta,
             text=text_alpha_clip
         )
+        self.time_end_ranking = time.time()
+        
+        return predicted_mask
 
 
 def build_MARS_fss(args):

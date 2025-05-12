@@ -77,6 +77,16 @@ def test_MARS(args):
         time_elapsed_per_batch.append(time_elapsed_batch)
         time_last_batch = time.time()
         
+        # Logging time used for ranking
+        full_mars_prediction_time = mars.time_end_ranking - mars.time_start_ranking
+        mars_prediction_time_after_text_extraction = mars.time_end_ranking - mars.time_start_ranking_after_text_extraction
+        number_of_proposals = mask_proposals.shape[0]
+        
+        with open(os.path.join(log_path, 'ranking_time.csv'), 'a') as f:
+            if idx == 0:
+                f.write('idx,full_mars_prediction_time,ranking_time_after_text_extraction,number_of_proposals\n')
+            f.write(f'{idx},{full_mars_prediction_time:.4f},{mars_prediction_time_after_text_extraction:.4f},{number_of_proposals}\n')
+        
     # Write evaluation results
     average_meter.write_result('Test', 0)
     miou, fb_iou, _ = average_meter.compute_iou()
