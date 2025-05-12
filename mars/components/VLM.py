@@ -172,7 +172,8 @@ class VLM:
             zoom_percent=self.generation_config.zoom_pctg
         )
         
-        prompted_image = self.processor(text=SYSTEM_PROMPT_TEMPLATE_VLM_VIP_LLAVA.format(VISUAL_PROMPTS_DESCRIPTIONS_VLM_VIP_LLAVA[self.generation_config.prompt_type].format(class_name, self.generation_config.color, class_name, class_name)), images=Image.fromarray(prompted_image_np), return_tensors="pt").to(self.model.device)
+        prompted_image = self.processor(text=SYSTEM_PROMPT_TEMPLATE_VLM_VIP_LLAVA.format(VISUAL_PROMPTS_DESCRIPTIONS_VLM_VIP_LLAVA[self.generation_config.prompt_type].format(class_name, self.generation_config.color)), images=Image.fromarray(prompted_image_np), return_tensors="pt").to(self.model.device)
+        # prompted_image = self.processor(text=SYSTEM_PROMPT_TEMPLATE_VLM_VIP_LLAVA.format(VISUAL_PROMPTS_DESCRIPTIONS_VLM_VIP_LLAVA[self.generation_config.prompt_type].format(class_name, self.generation_config.color, class_name, class_name)), images=Image.fromarray(prompted_image_np), return_tensors="pt").to(self.model.device)
         res = self.model.generate(**prompted_image, min_new_tokens=15, max_new_tokens=50)
         pred_description = self.processor.decode(res[0][len(prompted_image['input_ids'][0]):], skip_special_tokens=True)
         

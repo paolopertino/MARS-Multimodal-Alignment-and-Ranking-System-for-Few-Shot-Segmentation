@@ -36,11 +36,17 @@ VISUAL_PROMPTS_VLM_VIP_LLAVA = {
 }
 
 VISUAL_PROMPTS_DESCRIPTIONS_VLM_VIP_LLAVA = {
-    "mask": "This image shows a {} highlighted by the {} mask. Please provide the vocabulary definition of the word {}. Name {}, definition:",
-    "bb": "This image shows a {} highlighted by the {} rectangle. Please provide the vocabulary definition of the word {}. Name {}, definition:",
-    "contour": "This image shows a {} highlighted by the {} mask contour. Please provide the vocabulary definition of the word {}. Name {}, definition:",
-    "ellipse": "This image shows a {} highlighted by the {} ellipses. Please provide the vocabulary definition of the word {}. Name {}, definition:",
+    "mask": "Given the image provided, identify and provide the definition of the {} highlighted by the {} mask.",
+    "bb": "Given the image provided, identify and provide the definition of the {} inside the {} rectangle.",
+    "contour": "Given the image provided, identify and provide the definition of the {} inside the {} mask contour.",
+    "ellipse": "Given the image provided, identify and provide the definition of the {} inside the {} ellipses. ",
 }
+# VISUAL_PROMPTS_DESCRIPTIONS_VLM_VIP_LLAVA = {
+#     "mask": "This image shows a {} highlighted by the {} mask. Please provide the vocabulary definition of the word {}. Name {}, definition:",
+#     "bb": "This image shows a {} highlighted by the {} rectangle. Please provide the vocabulary definition of the word {}. Name {}, definition:",
+#     "contour": "This image shows a {} highlighted by the {} mask contour. Please provide the vocabulary definition of the word {}. Name {}, definition:",
+#     "ellipse": "This image shows a {} highlighted by the {} ellipses. Please provide the vocabulary definition of the word {}. Name {}, definition:",
+# }
 
 EXAMPLES_OPENAI = [
     {"role": "user", "content": "apple"},

@@ -81,9 +81,9 @@ def build_visual_text_alignment_component(args):
         encoder_kwargs={'device': args.device, 'download_root': args.models_path}
     )
     vtp_model_patch_size = int(args.vta_backbone[-2:])
-    embedding_spatial_dimensions = int(np.ceil(int(args.input_size) / vtp_model_patch_size)* vtp_model_patch_size)
+    model_input_spatial_dimensions = int(np.ceil(int(args.input_size) / vtp_model_patch_size)* vtp_model_patch_size)
     vtp_transforms = transforms.Compose([
-        transforms.Resize((embedding_spatial_dimensions, embedding_spatial_dimensions), interpolation=BICUBIC),
+        transforms.Resize((model_input_spatial_dimensions, model_input_spatial_dimensions), interpolation=BICUBIC),
         transforms.Normalize((0.48145466, 0.4578275, 0.40821073),
                   (0.26862954, 0.26130258, 0.27577711)),
     ])
@@ -93,7 +93,7 @@ def build_visual_text_alignment_component(args):
         model=vtp_model,
         model_transforms=vtp_transforms,
         model_patch_size=vtp_model_patch_size,
-        model_embedding_spatial_dimensions=embedding_spatial_dimensions,
+        model_embedding_spatial_dimensions=model_input_spatial_dimensions/vtp_model_patch_size,
         model_num_regs=0,
         vta_refinement_box_threshold=args.vta_refinement_box_threshold,
         last_n_attention_maps_for_refinement=args.last_n_attn_for_vta_refinement,

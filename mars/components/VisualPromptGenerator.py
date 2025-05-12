@@ -21,7 +21,7 @@ class VisualPromptGenerator(abc.ABC):
         color: tuple[int, int, int] = (255, 0, 0), 
         alpha: float = 0.5, 
         thickness: int = 2,
-        zoom_percent: float = 0.
+        zoom_percent: int = 0
     ) -> np.ndarray:
         """Draw a visual prompt on an image.
 
@@ -35,6 +35,8 @@ class VisualPromptGenerator(abc.ABC):
         :type alpha: float, optional
         :param thickness: thickness of the visual prompt to apply to the image, defaults to 2
         :type thickness: int, optional
+        :param zoom_percent: percentage of zoom to apply, defaults to 0.
+        :type zoom_percent: int, optional
         :return: image with the visual prompt applied onto it
         :rtype: np.ndarray
         """
@@ -44,7 +46,7 @@ class VisualPromptGenerator(abc.ABC):
         self, 
         image: np.ndarray, 
         mask: np.ndarray, 
-        zoom_percent: float = 0.
+        zoom_percent: int = 0
     ) -> np.ndarray:
         """Zoom on the object(s) in an image based on a binary mask.
 
@@ -53,7 +55,7 @@ class VisualPromptGenerator(abc.ABC):
         :param mask: binary mask of the object(s) to zoom on
         :type mask: np.ndarray
         :param zoom_percent: percentage of zoom to apply, defaults to 0.
-        :type zoom_percent: float, optional
+        :type zoom_percent: int, optional
         :return: zoomed image
         :rtype: np.ndarray
         """
@@ -109,7 +111,7 @@ class MaskGenerator(VisualPromptGenerator):
         color: tuple[int, int, int] = (255, 0, 0), 
         alpha: float = 0.5, 
         thickness: int = 2,
-        zoom_percent: float = 0.
+        zoom_percent: int = 0
     ) -> np.ndarray:
         """
         Blend an image X with a binary mask and a specified color according to the rule:
@@ -123,7 +125,12 @@ class MaskGenerator(VisualPromptGenerator):
         :type color: tuple[int, int, int], optional
         :param alpha: Blending parameter between 0 and 1, defaults to 0.5
         :type alpha: float, optional
+        :param thickness: Thickness of the mask, defaults to 2
+        :type thickness: int, optional
+        :param zoom_percent: Percentage of zoom to apply, defaults to 0.
+        :type zoom_percent: int, optional
         :return: Composite image
+        :rtype: np.ndarray
         """
         # Ensure mask is binary
         mask = (mask > 0).astype(float)
@@ -152,7 +159,7 @@ class BoundingBoxGenerator(VisualPromptGenerator):
         color: tuple[int, int, int] = (255, 0, 0), 
         alpha: float = 0.5, 
         thickness: int = 2,
-        zoom_percent: float = 0.
+        zoom_percent: int = 0
     ) -> np.ndarray:
         """Draw bounding boxes around objects in an image based on a binary mask.
 
@@ -166,7 +173,9 @@ class BoundingBoxGenerator(VisualPromptGenerator):
         :type alpha: float, optional
         :param thickness: thickness of the bounding box in pixel, defaults to 2
         :type thickness: int, optional
-        :return: _description_
+        :param zoom_percent: percentage of zoom to apply, defaults to 0.
+        :type zoom_percent: int, optional
+        :return: image with bounding boxes drawn around the objects
         :rtype: np.ndarray
         """
         # Ensure mask is binary and of type uint8
@@ -197,8 +206,25 @@ class MaskContourGenerator(VisualPromptGenerator):
         color: tuple[int, int, int] = (255, 0, 0), 
         alpha: float = 0.5, 
         thickness: int = 2,
-        zoom_percent: float = 0.
+        zoom_percent: int = 0
     ) -> np.ndarray:
+        """Draw contours around objects in an image based on a binary mask.
+        
+        :param image: input image to draw contours on (RGB format) (pixel values in [0, 255])
+        :type image: np.ndarray
+        :param mask: binary mask of the objects to draw contours around
+        :type mask: np.ndarray
+        :param color: color of the contours drawn onto the input image, defaults to (255, 0, 0)
+        :type color: tuple[int, int, int], optional
+        :param alpha: Blending parameter between 0 and 1, defaults to 0.5
+        :type alpha: float, optional
+        :param thickness: thickness of the contours in pixel, defaults to 2
+        :type thickness: int, optional
+        :param zoom_percent: percentage of zoom to apply, defaults to 0.
+        :type zoom_percent: int, optional
+        :return: image with contours drawn around the objects
+        :rtype: np.ndarray
+        """
         # Ensure mask is binary and of type uint8
         mask = (mask > 0).astype(np.uint8)
 
@@ -226,8 +252,25 @@ class EllipseGenerator(VisualPromptGenerator):
         color: tuple[int, int, int] = (255, 0, 0), 
         alpha: float = 0.5, 
         thickness: int = 2,
-        zoom_percent: float = 0.
+        zoom_percent: int = 0
     ) -> np.ndarray:
+        """Draw ellipses around objects in an image based on a binary mask.
+        
+        :param image: input image to draw ellipses on (RGB format) (pixel values in [0, 255])
+        :type image: np.ndarray
+        :param mask: binary mask of the objects to draw ellipses around
+        :type mask: np.ndarray
+        :param color: color of the ellipses drawn onto the input image, defaults to (255, 0, 0)
+        :type color: tuple[int, int, int], optional
+        :param alpha: Blending parameter between 0 and 1, defaults to 0.5
+        :type alpha: float, optional
+        :param thickness: thickness of the ellipses in pixel, defaults to 2
+        :type thickness: int, optional
+        :param zoom_percent: percentage of zoom to apply, defaults to 0.
+        :type zoom_percent: int, optional
+        :return: image with ellipses drawn around the objects
+        :rtype: np.ndarray
+        """
         expansion_factor = 1.2
         
         # Ensure mask is binary and of type uint8
