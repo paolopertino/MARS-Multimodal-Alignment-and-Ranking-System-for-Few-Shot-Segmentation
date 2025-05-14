@@ -3,6 +3,7 @@ import argparse
 import os
 import random
 import time
+import gc
 
 import nltk
 import torch
@@ -86,6 +87,11 @@ def test_MARS(args):
             if idx == 0:
                 f.write('idx,full_mars_prediction_time,ranking_time_after_text_extraction,number_of_proposals\n')
             f.write(f'{idx},{full_mars_prediction_time:.4f},{mars_prediction_time_after_text_extraction:.4f},{number_of_proposals}\n')
+            
+        # Freeing memory
+        mars.clear()
+        torch.cuda.empty_cache()
+        gc.collect()
         
     # Write evaluation results
     average_meter.write_result('Test', 0)

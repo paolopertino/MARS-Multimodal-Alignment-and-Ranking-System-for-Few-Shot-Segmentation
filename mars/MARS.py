@@ -102,6 +102,9 @@ class MARS:
         self.time_end_ranking = time.time()
         
         return predicted_mask
+    
+    def clear(self):
+        self.visual_visual_alignment_component.clear()
 
 
 def build_MARS_fss(args):

@@ -66,7 +66,7 @@ class VisualVisualAlignmentModule:
         visual_support_feats = self._extract_patch_features(support_imgs[0])
         visual_query_feats = self._extract_patch_features(query_img)
         visual_attention_maps = list(self.model.get_last_self_attention(self.model_transforms(query_img[0]).unsqueeze(0).to(self.device)))
-        self.similarity_matrix = torch.matmul(visual_support_feats, visual_query_feats.T).cpu()
+        self.similarity_matrix = torch.matmul(visual_support_feats, visual_query_feats.T).detach().cpu()
         self.cost_matrix = (1 - self.similarity_matrix) / 2
         
         pooled_support_mask = F.adaptive_max_pool2d(
@@ -125,6 +125,10 @@ class VisualVisualAlignmentModule:
         feats = F.normalize(feats, p=2, dim=1)
 
         return feats
+    
+    def clear(self):
+        self.similarity_matrix = None
+        self.cost_matrix = None
     
 def build_visual_visual_alignment_component(args):
     print("[VVA] - Loading VVA module...")

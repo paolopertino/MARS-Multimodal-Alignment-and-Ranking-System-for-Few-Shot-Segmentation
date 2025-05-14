@@ -72,6 +72,9 @@ class VisualTextAlignmentModule:
         )
         
         return refined_cam
+    
+    def clear(self):
+        pass
 
 def build_visual_text_alignment_component(args):
     print("[VTA] - Loading VTA module...")

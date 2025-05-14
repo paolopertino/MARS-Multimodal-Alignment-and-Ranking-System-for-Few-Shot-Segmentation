@@ -30,6 +30,7 @@ class FilteringMergingModule:
         self.static_threshold = static_threshold
         self.dynamic_threshold = dynamic_threshold
         self.device = device
+        self.alpha_clip_batch_size = 128
     
     def compute(
         self,
@@ -94,6 +95,10 @@ class FilteringMergingModule:
             mask_proposals, 
         )
         alphaclip_scores = list((img_feats @ text_feats.T).cpu().numpy())
+        
+        # Freeing memory
+        del img_feats
+        del text_feats
         
         for m_p in mask_proposals:
             pooled_m_p = F.adaptive_max_pool2d(
@@ -183,20 +188,22 @@ class FilteringMergingModule:
         image_np = image.permute(1,2,0).cpu().numpy()
         image_alpha_clip = self.img_transforms(image_np).unsqueeze(0).half().to(self.device)
         
-        # masks is a tensor of shape (n_masks, h, w). To compute in a single pass
-        # the features of all masks, we need to have the images stacked in a single tensor.
-        # Note that for each mask proposal the image is the same.
-        image_alpha_clip = image_alpha_clip.repeat(masks.shape[0], 1, 1, 1) # n_masks x 3 x h x w
-
-        alpha = torch.stack([self.mask_transforms((mask.cpu().numpy() * 255).astype(np.uint8)) for mask in masks]) # n_masks x 1 x h x w
-        alpha = alpha.half().to(self.device) # .unsqueeze(dim=0) 
-
-        with torch.no_grad():
-            image_features = self.alpha_clip_model.visual(image_alpha_clip, alpha)
-
-        image_features = image_features / image_features.norm(dim=-1, keepdim=True) # n_masks x embed_dim
+        all_feats = []
+        for i in range(0, masks.shape[0], self.alpha_clip_batch_size):
+            batch_masks = masks[i:min(i + self.alpha_clip_batch_size, masks.shape[0])]
+            batch_masks = torch.stack([self.mask_transforms((mask.cpu().numpy() * 255).astype(np.uint8)) for mask in batch_masks])
+            batch_masks = batch_masks.half().to(self.device)
+            
+            image_alpha_clip = image_alpha_clip.repeat(batch_masks.shape[0], 1, 1, 1) # n_masks_batch x 3 x h x w
+            with torch.no_grad():
+                image_features = self.alpha_clip_model.visual(image_alpha_clip, batch_masks)
+            image_features = image_features / image_features.norm(dim=-1, keepdim=True) # n_masks_batch x embed_dim
+            all_feats.append(image_features)
         
-        return image_features
+        del image_alpha_clip
+        del batch_masks
+        
+        return torch.cat(all_feats, dim=0)
     
     def _merge_masks(
         self,
