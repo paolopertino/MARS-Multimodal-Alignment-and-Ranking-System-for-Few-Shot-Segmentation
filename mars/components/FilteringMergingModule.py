@@ -194,13 +194,14 @@ class FilteringMergingModule:
             batch_masks = torch.stack([self.mask_transforms((mask.cpu().numpy() * 255).astype(np.uint8)) for mask in batch_masks])
             batch_masks = batch_masks.half().to(self.device)
             
-            image_alpha_clip = image_alpha_clip.repeat(batch_masks.shape[0], 1, 1, 1) # n_masks_batch x 3 x h x w
+            image_alpha_clip_batch = image_alpha_clip.repeat(batch_masks.shape[0], 1, 1, 1) # n_masks_batch x 3 x h x w
             with torch.no_grad():
-                image_features = self.alpha_clip_model.visual(image_alpha_clip, batch_masks)
+                image_features = self.alpha_clip_model.visual(image_alpha_clip_batch, batch_masks)
             image_features = image_features / image_features.norm(dim=-1, keepdim=True) # n_masks_batch x embed_dim
             all_feats.append(image_features)
         
         del image_alpha_clip
+        del image_alpha_clip_batch
         del batch_masks
         
         return torch.cat(all_feats, dim=0)
