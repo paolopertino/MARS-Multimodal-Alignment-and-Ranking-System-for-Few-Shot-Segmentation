@@ -89,11 +89,12 @@ class FilteringMergingModule:
         text_feats = self._compute_alphaclip_text_feats(text)
         
         # Batched computation of alphaclip image features
-        print(f'[FilteringMergingModule] - Query image shape: {query_img.shape}, mask proposals shape: {mask_proposals.shape}')
-        img_feats, text_feats = self._compute_alphaclip_vis_feats(
+        img_feats = self._compute_alphaclip_vis_feats(
             query_img[0], 
             mask_proposals, 
         )
+        alphaclip_scores = list((img_feats @ text_feats.T).cpu().numpy())
+        print(f'[FilteringMergingModule] - img_feats shape: {img_feats.shape}, text_feats shape: {text_feats.shape}, alphaclip_scores shape: {len(alphaclip_scores)}')
         
         for m_p in mask_proposals:
             pooled_m_p = F.adaptive_max_pool2d(
@@ -115,7 +116,6 @@ class FilteringMergingModule:
             pvt_score = self.alpha * m_p_alignment_pvt + (1 - self.alpha) * coverage_m_p
             
             emd_scores.append(emd_score)
-            alphaclip_scores.append(alphaclip_score)
             pvv_scores.append(pvv_score)
             pvt_scores.append(pvt_score)
         
@@ -189,18 +189,18 @@ class FilteringMergingModule:
         # the features of all masks, we need to have the images stacked in a single tensor.
         # Note that for each mask proposal the image is the same.
         image_alpha_clip = image_alpha_clip.repeat(masks.shape[0], 1, 1, 1)
-        print(f'[FilteringMergingModule] - Stacked query image shape: {image_alpha_clip.shape}')
+        # print(f'[FilteringMergingModule] - Stacked query image shape: {image_alpha_clip.shape}')
 
         alpha = torch.stack([self.mask_transforms((mask.cpu().numpy() * 255).astype(np.uint8)) for mask in masks])
         # alpha = self.mask_transforms((masks.cpu().numpy() * 255).astype(np.uint8))
         alpha = alpha.half().to(self.device) # .unsqueeze(dim=0)
-        print(f'[FilteringMergingModule] - Stacked masks shape: {alpha.shape}')
+        # print(f'[FilteringMergingModule] - Stacked masks shape: {alpha.shape}')
 
         with torch.no_grad():
             image_features = self.alpha_clip_model.visual(image_alpha_clip, alpha)
 
         image_features = image_features / image_features.norm(dim=-1, keepdim=True)
-        print(f'[FilteringMergingModule] - Image features shape: {image_features.shape}')
+        # print(f'[FilteringMergingModule] - Image features shape: {image_features.shape}')
         
         return image_features
     
