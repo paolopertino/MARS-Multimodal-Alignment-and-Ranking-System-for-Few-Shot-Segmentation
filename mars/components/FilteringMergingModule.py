@@ -78,10 +78,22 @@ class FilteringMergingModule:
             mask_union.unsqueeze(0), 
             (patch_features_spatial_dimension, patch_features_spatial_dimension)
         ).squeeze(0).cpu().numpy() > 0
+        
+        # Storing mask proposals scores
         emd_scores = []
         alphaclip_scores = []
         pvv_scores = []
         pvt_scores = []
+        
+        # Pre-computing alphaclip text features
+        text_feats = self._compute_alphaclip_text_feats(text)
+        
+        # Batched computation of alphaclip image features
+        print(f'[FilteringMergingModule] - Query image shape: {query_img.shape}, mask proposals shape: {mask_proposals.shape}')
+        img_feats, text_feats = self._compute_alphaclip_vis_feats(
+            query_img[0], 
+            mask_proposals, 
+        )
         
         for m_p in mask_proposals:
             pooled_m_p = F.adaptive_max_pool2d(
@@ -91,11 +103,7 @@ class FilteringMergingModule:
             coverage_m_p = np.sum(pooled_m_p.cpu().numpy() > 0) / (1e-7 + np.sum(pooled_mask_union))
             m_p_alignment_pvv = np.sum(vva[pooled_m_p.cpu().numpy() > 0]) / (1e-7 + np.sum(pooled_m_p.cpu().numpy() > 0))
             m_p_alignment_pvt = np.sum(vta[pooled_m_p.cpu().numpy() > 0]) / (1e-7 + np.sum(pooled_m_p.cpu().numpy() > 0))
-            img_feats, text_feats = self._compute_alphaclip_feats(
-                query_img[0], 
-                m_p, 
-                text
-            )
+            
             emd_score = self._compute_emd(
                 pooled_support_mask.cpu(),
                 pooled_m_p,
@@ -157,29 +165,43 @@ class FilteringMergingModule:
         
         return emd_score
     
-    def _compute_alphaclip_feats(
+    def _compute_alphaclip_text_feats(
         self,
-        image: torch.Tensor,
-        mask: torch.Tensor,
         text: list[str],
-    ) -> tuple[torch.Tensor, torch.Tensor]:
-        image_np = image.permute(1,2,0).cpu().numpy()
-        image_alpha_clip = self.img_transforms(image_np).unsqueeze(0).half().to(self.device)
+    ):
         tokenized_text = alpha_clip_tokenizer(text).to(self.device)
         
         with torch.no_grad():
             text_features = self.alpha_clip_model.encode_text(tokenized_text)
             text_features = text_features / text_features.norm(dim=-1, keepdim=True)
+        
+        return text_features
+    
+    def _compute_alphaclip_vis_feats(
+        self,
+        image: torch.Tensor,
+        masks: torch.Tensor,
+    ) -> torch.Tensor:
+        image_np = image.permute(1,2,0).cpu().numpy()
+        image_alpha_clip = self.img_transforms(image_np).unsqueeze(0).half().to(self.device)
+        
+        # masks is a tensor of shape (n_masks, h, w). To compute in a single pass
+        # the features of all masks, we need to have the images stacked in a single tensor.
+        # Note that for each mask proposal the image is the same.
+        image_alpha_clip = image_alpha_clip.repeat(masks.shape[0], 1, 1, 1)
+        print(f'[FilteringMergingModule] - Stacked query image shape: {image_alpha_clip.shape}')
 
-        alpha = self.mask_transforms((mask.cpu().numpy() * 255).astype(np.uint8))
+        alpha = self.mask_transforms((masks.cpu().numpy() * 255).astype(np.uint8))
         alpha = alpha.half().to(self.device).unsqueeze(dim=0)
+        print(f'[FilteringMergingModule] - Stacked masks shape: {alpha.shape}')
 
         with torch.no_grad():
             image_features = self.alpha_clip_model.visual(image_alpha_clip, alpha)
 
         image_features = image_features / image_features.norm(dim=-1, keepdim=True)
+        print(f'[FilteringMergingModule] - Image features shape: {image_features.shape}')
         
-        return image_features, text_features
+        return image_features
     
     def _merge_masks(
         self,
