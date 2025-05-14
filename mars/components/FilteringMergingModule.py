@@ -191,7 +191,8 @@ class FilteringMergingModule:
         image_alpha_clip = image_alpha_clip.repeat(masks.shape[0], 1, 1, 1)
         print(f'[FilteringMergingModule] - Stacked query image shape: {image_alpha_clip.shape}')
 
-        alpha = self.mask_transforms((masks.cpu().numpy() * 255).astype(np.uint8))
+        alpha = torch.stack([self.mask_transforms((mask.cpu().numpy() * 255).astype(np.uint8)) for mask in masks])
+        # alpha = self.mask_transforms((masks.cpu().numpy() * 255).astype(np.uint8))
         alpha = alpha.half().to(self.device).unsqueeze(dim=0)
         print(f'[FilteringMergingModule] - Stacked masks shape: {alpha.shape}')
 
