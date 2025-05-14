@@ -94,7 +94,6 @@ class FilteringMergingModule:
             mask_proposals, 
         )
         alphaclip_scores = list((img_feats @ text_feats.T).cpu().numpy())
-        print(f'[FilteringMergingModule] - img_feats shape: {img_feats.shape}, text_feats shape: {text_feats.shape}, alphaclip_scores shape: {len(alphaclip_scores)}')
         
         for m_p in mask_proposals:
             pooled_m_p = F.adaptive_max_pool2d(
@@ -110,8 +109,7 @@ class FilteringMergingModule:
                 pooled_m_p,
                 cost_matrix
             )
-            # alphaclip_score = ((img_feats @ text_feats.T) + 1) / 2
-            # alphaclip_score = alphaclip_score.item()
+            
             pvv_score = self.alpha * m_p_alignment_pvv + (1 - self.alpha) * coverage_m_p
             pvt_score = self.alpha * m_p_alignment_pvt + (1 - self.alpha) * coverage_m_p
             
@@ -188,19 +186,15 @@ class FilteringMergingModule:
         # masks is a tensor of shape (n_masks, h, w). To compute in a single pass
         # the features of all masks, we need to have the images stacked in a single tensor.
         # Note that for each mask proposal the image is the same.
-        image_alpha_clip = image_alpha_clip.repeat(masks.shape[0], 1, 1, 1)
-        # print(f'[FilteringMergingModule] - Stacked query image shape: {image_alpha_clip.shape}')
+        image_alpha_clip = image_alpha_clip.repeat(masks.shape[0], 1, 1, 1) # n_masks x 3 x h x w
 
-        alpha = torch.stack([self.mask_transforms((mask.cpu().numpy() * 255).astype(np.uint8)) for mask in masks])
-        # alpha = self.mask_transforms((masks.cpu().numpy() * 255).astype(np.uint8))
-        alpha = alpha.half().to(self.device) # .unsqueeze(dim=0)
-        # print(f'[FilteringMergingModule] - Stacked masks shape: {alpha.shape}')
+        alpha = torch.stack([self.mask_transforms((mask.cpu().numpy() * 255).astype(np.uint8)) for mask in masks]) # n_masks x 1 x h x w
+        alpha = alpha.half().to(self.device) # .unsqueeze(dim=0) 
 
         with torch.no_grad():
             image_features = self.alpha_clip_model.visual(image_alpha_clip, alpha)
 
-        image_features = image_features / image_features.norm(dim=-1, keepdim=True)
-        # print(f'[FilteringMergingModule] - Image features shape: {image_features.shape}')
+        image_features = image_features / image_features.norm(dim=-1, keepdim=True) # n_masks x embed_dim
         
         return image_features
     
