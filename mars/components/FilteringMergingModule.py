@@ -110,8 +110,8 @@ class FilteringMergingModule:
                 pooled_m_p,
                 cost_matrix
             )
-            alphaclip_score = ((img_feats @ text_feats.T) + 1) / 2
-            alphaclip_score = alphaclip_score.item()
+            # alphaclip_score = ((img_feats @ text_feats.T) + 1) / 2
+            # alphaclip_score = alphaclip_score.item()
             pvv_score = self.alpha * m_p_alignment_pvv + (1 - self.alpha) * coverage_m_p
             pvt_score = self.alpha * m_p_alignment_pvt + (1 - self.alpha) * coverage_m_p
             
