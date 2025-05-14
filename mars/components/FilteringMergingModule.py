@@ -188,11 +188,11 @@ class FilteringMergingModule:
         # masks is a tensor of shape (n_masks, h, w). To compute in a single pass
         # the features of all masks, we need to have the images stacked in a single tensor.
         # Note that for each mask proposal the image is the same.
-        image_alpha_clip = image_alpha_clip.repeat(masks.shape[0], 1, 1, 1)
+        # image_alpha_clip = image_alpha_clip.repeat(masks.shape[0], 1, 1, 1)
         print(f'[FilteringMergingModule] - Stacked query image shape: {image_alpha_clip.shape}')
 
-        alpha = torch.stack([self.mask_transforms((mask.cpu().numpy() * 255).astype(np.uint8)) for mask in masks])
-        # alpha = self.mask_transforms((masks.cpu().numpy() * 255).astype(np.uint8))
+        # alpha = torch.stack([self.mask_transforms((mask.cpu().numpy() * 255).astype(np.uint8)) for mask in masks])
+        alpha = self.mask_transforms((masks[0].cpu().numpy() * 255).astype(np.uint8))
         alpha = alpha.half().to(self.device).unsqueeze(dim=0)
         print(f'[FilteringMergingModule] - Stacked masks shape: {alpha.shape}')
 
