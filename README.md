@@ -32,11 +32,9 @@ If you find this project useful in your research, please consider cite:
 @misc{catalano2025marsmultimodalalignmentranking,
       title={MARS: a Multimodal Alignment and Ranking System for Few-Shot Segmentation}, 
       author={Nico Catalano and Stefano Samele and Paolo Pertino and Matteo Matteucci},
-      year={2025},
-      eprint={2504.07942},
-      archivePrefix={arXiv},
-      primaryClass={cs.CV},
-      url={https://arxiv.org/abs/2504.07942}, 
+      year={2026},
+      month= {March},
+      booktitle = {Proceedings of the Winter Conference on Applications of Computer Vision (WACV)},
 }
 ```
 
