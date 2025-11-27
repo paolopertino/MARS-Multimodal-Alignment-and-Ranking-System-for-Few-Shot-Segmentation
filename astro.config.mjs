@@ -10,6 +10,8 @@ import svelte from "@astrojs/svelte";
 // https://astro.build/config
 export default defineConfig({
   integrations: [tailwind(), icon(), mdx(), react(), svelte()],
+  site: 'https://paolopertino.github.io',
+  base: '/MARS-Multimodal-Alignment-and-Ranking-System-for-Few-Shot-Segmentation/',
   markdown: {
     shikiConfig: {
       themes: {
